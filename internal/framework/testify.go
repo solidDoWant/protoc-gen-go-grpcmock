@@ -271,6 +271,13 @@ func (tm *testifyMocker) generateMethodDefinitions(g *protogen.GeneratedFile, me
 	if len(method.Return) > 0 {
 		ret := make([]string, len(method.Return))
 		for i, r := range method.Return {
+			if r.IsPointer() {
+				g.P("var ret", i, " ", r)
+				g.P("if args.Get(", i, ") != nil {")
+				g.P("ret", i, " = args.Get(", i, ").(", r, ")")
+				g.P("}")
+			}
+
 			switch r {
 			case "bool":
 				ret[i] = fmt.Sprintf("args.Bool(%d)", i)
@@ -281,7 +288,11 @@ func (tm *testifyMocker) generateMethodDefinitions(g *protogen.GeneratedFile, me
 			case "error":
 				ret[i] = fmt.Sprintf("args.Error(%d)", i)
 			default:
-				ret[i] = fmt.Sprintf("args.Get(%d).(%v)", i, r)
+				if r.IsPointer() {
+					ret[i] = fmt.Sprintf("ret%d", i)
+				} else {
+					ret[i] = fmt.Sprintf("args.Get(%d).(%v)", i, r)
+				}
 			}
 		}
 		g.P("return ", strings.Join(ret, ", "))
