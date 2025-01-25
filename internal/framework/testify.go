@@ -276,6 +276,9 @@ func (tm *testifyMocker) generateMethodDefinitions(g *protogen.GeneratedFile, me
 				g.P("if args.Get(", i, ") != nil {")
 				g.P("ret", i, " = args.Get(", i, ").(", r, ")")
 				g.P("}")
+
+				ret[i] = fmt.Sprintf("ret%d", i)
+				continue
 			}
 
 			switch r {
@@ -288,11 +291,7 @@ func (tm *testifyMocker) generateMethodDefinitions(g *protogen.GeneratedFile, me
 			case "error":
 				ret[i] = fmt.Sprintf("args.Error(%d)", i)
 			default:
-				if r.IsPointer() {
-					ret[i] = fmt.Sprintf("ret%d", i)
-				} else {
-					ret[i] = fmt.Sprintf("args.Get(%d).(%v)", i, r)
-				}
+				ret[i] = fmt.Sprintf("args.Get(%d).(%v)", i, r)
 			}
 		}
 		g.P("return ", strings.Join(ret, ", "))
